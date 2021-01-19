@@ -174,8 +174,15 @@ namespace LacedServer.Classes.Managers
         public static async Task<User> GetPlayerData([FromSource] Player _player)
         {
             Utils.DebugLine("Getting Player Data!", "SDBManager");
-
             string query = "SELECT * FROM player_data";
+            //Check if the player has steam or not
+            if (_player.Identifiers["steam"] != null) { 
+                query += " WHERE player_steam='"+_player.Identifiers["steam"]+"'";
+            }
+            else
+            {
+                query += " WHERE player_license='"+_player.Identifiers["license"]+"'";
+            }
 
             return await SelectUserQueryDatabase(query);
         }

@@ -8,6 +8,35 @@
     using System.Threading.Tasks;
     public class Utils
     {
+        private static List<string> Alphabet = new List<string>()
+        {
+            "A",
+            "B",
+            "C",
+            "D",
+            "E",
+            "F",
+            "G",
+            "H",
+            "I",
+            "J",
+            "K",
+            "L",
+            "M",
+            "N",
+            "O",
+            "P",
+            "Q",
+            "R",
+            "S",
+            "T",
+            "U",
+            "V",
+            "W",
+            "X",
+            "Y",
+            "Z",
+        };
         public static void Throw(Exception _ex, string _msg = "")
         {
             string exceptionString = "Error Message: " + _ex.Message + "\n Stack:" + _ex.StackTrace;
@@ -47,6 +76,34 @@
             }
 
             return randomKey;
+        }
+        public static string CreateVehicleNumberPlate()
+        {
+            //We want four random letters and four random numbers in random assortment
+            int gameTime = new Random().Next();
+            string randomNumberResult = "";
+            for (int i = 0; i < 4; i++)
+            {
+                int randomTime = new Random().Next();
+                int resultTime = randomTime * gameTime;
+                if (resultTime.ToString().ToList()[i].ToString() != "-")
+                {
+                    randomNumberResult += resultTime.ToString().ToList()[i].ToString();
+                }
+                else
+                {
+                    i--;
+                }
+            }
+
+            string randomLetterResult = "";
+            for (int i = 0; i < 4; i++)
+            {
+                int randomNumber = new Random().Next(0, 25);
+                randomLetterResult += Alphabet[randomNumber];
+            }
+
+            return randomNumberResult + " " + randomLetterResult;
         }
     }
 }

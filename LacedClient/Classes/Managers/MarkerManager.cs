@@ -4,6 +4,7 @@ using CitizenFX.Core.NaturalMotion;
 using LacedShared.Libs;
 using LacedShared.Models;
 using LacedShared.Models.Configs;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -54,11 +55,11 @@ namespace LacedClient.Classes.Managers
                     {
                         if (API.IsControlJustReleased(0, 46))
                         {
-                            Action<Marker> markerAction = GetMarkerAction(m.MarkerKey);
+                            Action<Marker> markerAction = GetMarkerAction(m.MarkerAction);
 
                             markerAction(m);
 
-                            await MainClient.Delay(1000);
+                            await MainClient.Delay(500);
                         }
                     }
                 }
@@ -100,19 +101,16 @@ namespace LacedClient.Classes.Managers
             MarkerBlip.IsShortRange = true;
             MarkerBlip.Name = _markerName;
 
-            object markerData = null;
-
-            Dictionary<string, Delegate> markerAction = new Dictionary<string, Delegate>();
-
-            //Get the 3D marker type of the marker (ie. VerticalCylinder)
+            /*//Get the 3D marker type of the marker (ie. VerticalCylinder)
             foreach (MarkerType mt in Enum.GetValues(typeof(MarkerType)))
             {
-                if (mt.ToString() == _markerActionType)
+                if (mt.ToString() == _markerType)
                 {
                     markerType = mt;
                 }
-            }
+            }*/
 
+            object markerData = null;
             string stringPos = "";
             if (_markerData != null)
             {
@@ -121,30 +119,42 @@ namespace LacedClient.Classes.Managers
                     if (v.Key.ToLower().Contains("position"))
                     {
                         stringPos += v.Value + ",";
-                    }else if (v.Key.ToLower().Contains("vehicles"))
+                    } else if (v.Key.ToLower().Contains("vehicles"))
                     {
                         markerData = v.Value;
-                    }else if (v.Key.ToLower().Contains("markerteleport"))
+                    } else if (v.Key.ToLower().Contains("markerteleport"))
                     {
                         markerData = v.Value;
                     }
                 }
             }
 
-            if (stringPos != "")
+            if (_markerActionType.ToLower() == "cardealermarker")
             {
-                string[] stringArr = stringPos.Split(',');
-                Vector3 dataPosition = new Vector3( int.Parse(stringArr[0]), int.Parse(stringArr[1]), int.Parse(stringArr[2]));
-                markerData = dataPosition;
+                
+                if (stringPos != "")
+                {
+                    string[] stringArr = stringPos.Split(',');
+                    Vector3 dataPosition = new Vector3(int.Parse(stringArr[0]), int.Parse(stringArr[1]), int.Parse(stringArr[2]));
+                    AddMarker(_markerKey+"_sell", "Sell Vehicle", "SellVehicleMarker", dataPosition, _markerType, null, _markerColor, _markerWaypointColor);
+                }
+            } else
+            {
+                if (stringPos != "")
+                {
+                    string[] stringArr = stringPos.Split(',');
+                    Vector3 dataPosition = new Vector3(int.Parse(stringArr[0]), int.Parse(stringArr[1]), int.Parse(stringArr[2]));
+                    markerData = dataPosition;
+                }
             }
 
-            Marker newMarker = new Marker(_markerKey, _markerName, _markerPos, _markerType, markerAction, markerData);
+            Marker newMarker = new Marker(_markerKey, _markerName, _markerPos, _markerType, _markerActionType, markerData);
 
             MarkerList.Add(newMarker);
         }
-        public Action<Marker> GetMarkerAction(string _markerKey)
+        public Action<Marker> GetMarkerAction(string _markerActionType)
         {
-            string searchTerm = _markerKey.Replace(" ", "").ToLower();
+            string searchTerm = _markerActionType.Replace(" ", "").ToLower();
 
             //Loop through the marker types to find which action the marker should use
             foreach (var v in MarkerTypes)

@@ -61,6 +61,8 @@
     <Compile Include="Enums\Genders.cs" />
     <Compile Include="Enums\Permission.cs" />
     <Compile Include="MainShared.cs" />
+    <Compile Include="Models\CardealerItem.cs" />
+    <Compile Include="Models\CardealerItemList.cs" />
     <Compile Include="Models\Character.cs" />
     <Compile Include="Models\Configs\ATMConfig.cs" />
     <Compile Include="Models\Configs\CharacterConfig.cs" />

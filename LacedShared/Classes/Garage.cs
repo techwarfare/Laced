@@ -29,8 +29,13 @@ namespace LacedShared.Classes
         [JsonProperty]
         public Dictionary<string, int> vehicleMods { get; protected set; }
 
-        public GarageItem(int _characterID, string _vehicleName, string _vehicleModel, string _vehicleNumberPlate, bool _stored, bool _impounded, Dictionary<string, int> _vehicleMods)
+        public GarageItem()
         {
+
+        }
+        public GarageItem(int _garageID, int _characterID, string _vehicleName, string _vehicleModel, string _vehicleNumberPlate, bool _stored, bool _impounded, Dictionary<string, int> _vehicleMods)
+        {
+            garageID = _garageID;
             characterID = _characterID;
             vehicleName = _vehicleName;
             vehicleModel = _vehicleModel;
@@ -38,6 +43,18 @@ namespace LacedShared.Classes
             stored = _stored;
             impounded = _impounded;
             vehicleMods = _vehicleMods;
+        }
+        public void setImpounded(bool _val)
+        {
+            impounded = _val;
+        }
+        public void setStored(bool _val)
+        {
+            stored = _val;
+        }
+        public void setNetworkID(int _val)
+        {
+            vehicleNetworkID = _val;
         }
     }
     public class Garage

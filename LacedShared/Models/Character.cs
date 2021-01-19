@@ -1,5 +1,6 @@
 ﻿using LacedShared.Classes;
 using LacedShared.Enums;
+using LacedShared.Libs;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -303,6 +304,37 @@ namespace LacedShared.Models
         public void IncreaseHunger(int _amount)
         {
             this.Hunger = Hunger + _amount;
+        }
+        public bool BuyItem(int _amount)
+        {
+            if (Wallet >= _amount)
+            {
+                Wallet = Wallet - _amount;
+                return true;
+            }
+            else if (Bank >= _amount)
+            {
+                Bank = Bank - _amount;
+                return true;
+            }
+            return false;
+        }
+        public void SellItem(int _amount)
+        {
+            Wallet = Wallet + _amount;
+        }
+        public bool SellVehicle(GarageItem _garageItem)
+        {
+            try
+            {
+                Garage.garageItems.Remove(_garageItem);
+                return true;
+            }
+            catch (Exception _ex)
+            {
+                Utils.Throw(_ex);
+                return false;
+            }
         }
     }
 }

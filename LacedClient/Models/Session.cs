@@ -1,4 +1,5 @@
 ﻿using LacedClient.Classes.Managers;
+using LacedClient.Classes.Player;
 using LacedShared.Libs;
 using LacedShared.Models;
 using System;
@@ -24,6 +25,8 @@ namespace LacedClient.Models
             Utils.DebugLine($"Session Created! [{_seshKey}]", "CSession");
             MarkerManager = new MarkerManager();
             SessionKey = _seshKey;
+
+            new BlipChange();
         }
         ~Session()
         {

@@ -56,38 +56,69 @@ namespace LacedClient.Classes
         }
         public async static void EnableCardealerMenu(Marker _marker)
         {
-            if (_marker == null || _marker.MarkerData == null)
+            //Make sure that the marker and the marker data (i.e. cardealer vehicles) are not null
+            if (_marker != null && _marker.MarkerData != null)
             {
+                if (!Game.PlayerPed.IsInVehicle() || !Game.Player.IsAlive) { Utils.WriteLine("Not in a vehicle or dead!"); return; }
+
                 MainClient.GetInstance().SetNUIFocus(true, true);
+                Utils.WriteLine(_marker.MarkerData.ToString());
                 MainClient.GetInstance().SendNUIData("laced_cardealer", "OpenMenu", JsonConvert.SerializeObject(_marker.MarkerData));
                 await Task.FromResult(0);
             }
         }
         public async static void EnableGarageMenu(Marker _marker)
         {
-            if (_marker == null || _marker.MarkerData == null)
+            if (_marker != null)
             {
+                if (Game.PlayerPed.IsInVehicle() || !Game.Player.IsAlive) { Utils.WriteLine("In a vehicle or dead!"); return; }
+
                 MainClient.GetInstance().SetNUIFocus(true, true);
-                MainClient.GetInstance().SendNUIData("laced_garage", "OpenMenu", JsonConvert.SerializeObject(_marker.MarkerData));
+                MainClient.GetInstance().SendNUIData("laced_garage", "OpenMenu", JsonConvert.SerializeObject(SessionManager.PlayerSession.getSelectedCharacter().Garage.garageItems));
                 await Task.FromResult(0);
             }
         }
-        /// <summary>
-        /// TO-DO
-        /// Make mechanic menu a NUI menu
-        /// </summary>
-        /// <param name="_marker"></param>
         public async static void EnableMechanicMenu(Marker _marker)
         {
             if (_marker == null || _marker.MarkerData == null)
             {
-                MainClient.GetInstance().SetNUIFocus(true, true);
-                MainClient.GetInstance().SendNUIData("laced_mechanic", "OpenMenu", JsonConvert.SerializeObject(Game.PlayerPed.CurrentVehicle));
+                
             }
         }
         public async static void GarageStoring(Marker _marker)
         {
-            if (_marker == null || _marker.MarkerData == null) { return; }
+            if (_marker == null) { return; }
+
+            if (!Game.PlayerPed.IsInVehicle() || !Game.Player.IsAlive) { Utils.WriteLine("Not in a vehicle or dead!"); return; }
+            await Task.FromResult(0);
+            //Get the current vehicle of the character
+            Vehicle plyVeh = Game.Player.Character.CurrentVehicle;
+            Utils.WriteLine($"Vehicle handle:[{plyVeh.Handle}], Vehicle ID:[{plyVeh.NetworkId}]");
+            //Loop through all of the characters garage items to check if the current vehicle is inside their garage
+            foreach (GarageItem gI in SessionManager.PlayerSession.getSelectedCharacter().Garage.garageItems)
+            {
+                Utils.WriteLine($"Garage network id:[{gI.vehicleNetworkID}]");
+                //If the network ID is the same between both items then we know the character has their own car
+                if (gI.vehicleNetworkID == plyVeh.NetworkId)
+                {
+                    //Send the 
+                    MainClient.TriggerServerEvent("Laced:GarageStoreVehicle", SessionManager.PlayerSession.getSessionKey(), JsonConvert.SerializeObject(gI), new Action<bool>((_stored) => { 
+                        //Networkcallback, if the server returned with true then we can set if the car is stored and impounded
+                        if (_stored)
+                        {
+                            GarageItem updatedItem = SessionManager.PlayerSession.getSelectedCharacter().Garage.garageItems.Find(GI => GI.garageID == gI.garageID);
+                            updatedItem.setImpounded(false);
+                            updatedItem.setStored(true);
+                            updatedItem.setNetworkID(0);
+                            plyVeh.Delete();
+                        }
+                        else
+                        {
+                            Utils.WriteLine("Something went wrong when storing the vehicle!");
+                        }
+                    }));
+                }
+            }
         }
         public async static void SellVehicle(Marker _marker)
         {
@@ -102,15 +133,19 @@ namespace LacedClient.Classes
                 {
                     if (gI.vehicleNetworkID == plyVeh.NetworkId)
                     {
-                        MainClient.TriggerServerEvent("Laced:SellVehicle", plyVeh.Model.Hash, gI.garageID, new Action<string>((seshKey) =>
+                        MainClient.TriggerServerEvent("Laced:SellCardealerVehicle", SessionManager.PlayerSession.getSessionKey(), JsonConvert.SerializeObject(gI), new Action<bool, string, int>((_sold, _garageItem, _price) =>
                         {
-
+                            if (_sold)
+                            {
+                                Utils.WriteLine("Selling vehicle!");
+                                GarageItem garageItem = JsonConvert.DeserializeObject<GarageItem>(_garageItem);
+                                SessionManager.PlayerSession.getSelectedCharacter().SellVehicle(garageItem);
+                                Utils.WriteLine("Removed vehicle!");
+                                SessionManager.PlayerSession.getSelectedCharacter().SellItem(_price);
+                                Utils.WriteLine("Sold vehicle!");
+                                API.DeleteEntity(ref vehHandle);
+                            }
                         }));
-
-                        await MainClient.Delay(500);
-                        API.DeleteEntity(ref vehHandle);
-
-                        
                     }
                 }
             }

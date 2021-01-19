@@ -34,6 +34,9 @@ namespace LacedShared.Models.Configs
         //Might need the map name if we ever swap out maps
         [JsonProperty]
         public string MapName { get; protected set; }
+        //RP impound is to check if we automatically impound vehicles when retrieving them from garage/buying vehicles
+        [JsonProperty]
+        public bool RPImpound { get; protected set; }
         [JsonProperty]
         public string[] DebugClasses { get; protected set; }
     }

@@ -15,8 +15,22 @@ namespace LacedClient.Classes.Managers
         {
             MainClient.GetInstance().RegisterEventHandler("Laced:AdminSpawnVehicle", new Action<string, string>(AdminSpawnVehicle));
             MainClient.GetInstance().RegisterEventHandler("Laced:ChangeCharacter", new Action<string, string>(ChangeCharacter));
+            MainClient.GetInstance().RegisterEventHandler("Laced:GetCharacterPosition", new Action<string>(GetCharacterPosition));
+            MainClient.GetInstance().RegisterEventHandler("Laced:AdminGiveWeapon", new Action<string, string>(AdminGiveWeapon));
         }
+        private async void GetCharacterPosition(string _seshKey)
+        {
+            await Task.FromResult(0);
+            if (!Helpers.CheckSessionKey(_seshKey)) { MainClient.TriggerServerEvent("Laced:SessionKeyError"); return; }
 
+            Utils.WriteLine($"X: {Game.PlayerPed.Position.X}, Y:{Game.PlayerPed.Position.Y}, Z:{Game.PlayerPed.Position.Z}");
+        }
+        private async void AdminGiveWeapon(string _seshKey, string _vehicleModel)
+        {
+            if (!Helpers.CheckSessionKey(_seshKey)) { MainClient.TriggerServerEvent("Laced:SessionKeyError"); return; }
+
+            await MainClient.Delay(0);
+        }
         private async void AdminSpawnVehicle(string _seshKey, string _vehicleModel)
         {
             if (!Helpers.CheckSessionKey(_seshKey)) { MainClient.TriggerServerEvent("Laced:SessionKeyError"); return; }

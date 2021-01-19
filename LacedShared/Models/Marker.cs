@@ -22,9 +22,9 @@ namespace LacedShared.Models
 
         public Vector3 MarkerPos { get; protected set; }
         public string MarkerType { get; protected set; }
-        public Dictionary<string, Delegate> MarkerAction { get; protected set; }
+        public string MarkerAction { get; protected set; }
         public object MarkerData { get; protected set; }
-        public Marker(string _markerKey, string _markerName, Vector3 _markerPos, string _markerType, Dictionary<string, Delegate> _markerAction = null, object _markerData = null)
+        public Marker(string _markerKey, string _markerName, Vector3 _markerPos, string _markerType, string _markerAction = null, object _markerData = null)
         {
             MarkerKey = _markerKey;
             MarkerName = _markerName;

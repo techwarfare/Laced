@@ -96,6 +96,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Classes\Helpers.cs" />
     <Compile Include="Classes\Managers\CommandManager.cs" />
     <Compile Include="Classes\Managers\ConfigManager.cs" />
     <Compile Include="Classes\Managers\ConnectionManager.cs" />

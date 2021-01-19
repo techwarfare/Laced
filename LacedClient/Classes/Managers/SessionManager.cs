@@ -6,6 +6,7 @@
     using LacedClient.Models;
     using LacedShared.Classes;
     using LacedShared.Libs;
+    using LacedShared.Models;
     using Newtonsoft.Json;
     using System;
     using System.Collections.Generic;
@@ -14,7 +15,7 @@
 
     public class SessionManager
     {
-        public bool NUIReady = false;
+        public static bool NUIReady = false;
 
         public static Session PlayerSession;
         private static CommandManager CommandManager;
@@ -25,12 +26,15 @@
             
 
             MainClient.GetInstance().RegisterNUICallback("laced_interface_ready", SetNUIReady);
+            MainClient.GetInstance().RegisterNUICallback("laced_interface_close", CloseNUI);
 
             CommandManager = new CommandManager();
 
             try
             {
                 RegisterCharacterNUICallbacks();
+                RegisterCardealerNUICallbacks();
+                RegisterGarageNUICallbacks();
             }
             catch (Exception _ex)
             {
@@ -51,6 +55,12 @@
 
             _ = _callback(new { ok = true });
         }
+        private void CloseNUI(dynamic _data, CallbackDelegate _callback)
+        {
+            MainClient.GetInstance().SetNUIFocus(false, false);
+
+            _ = _callback(new { ok = true });
+        }
         public void RegisterEventHandlers()
         {
             MainClient.GetInstance().RegisterEventHandler("onClientResourceStart", new Action<string>(OnClientResourceStart));
@@ -60,6 +70,14 @@
             MainClient.GetInstance().RegisterEventHandler("Laced:UpdateCharacterSelection", new Action<string>(UpdateCharacterSelection));
 
             Utils.DebugLine("Registered Event Handlers!", "CSessionManager");
+        }
+        public static void RegisterCardealerNUICallbacks()
+        {
+            MainClient.GetInstance().RegisterNUICallback("laced_cardealer_buy", BuyCardealerVehicle);
+        }
+        public static void RegisterGarageNUICallbacks()
+        {
+            MainClient.GetInstance().RegisterNUICallback("laced_garage_retrieve", RetrieveGarageVehicle);
         }
         public static void RegisterCharacterNUICallbacks()
         {
@@ -162,10 +180,91 @@
 
             _ = _callback(new { ok = true });
         }
+        private static async void BuyCardealerVehicle(dynamic _data, CallbackDelegate _callback)
+        {
+            Utils.WriteLine("Buying cardealer!");
+
+            MainClient.TriggerServerEvent("Laced:BuyCardealerVehicle", PlayerSession.getSessionKey(), (string)_data.CarModel, new Action<bool, string>(async (_bought, _garageItem) => {
+                if (_bought)
+                {
+                    Character playerCharacter = PlayerSession.getSelectedCharacter();
+                    GarageItem garageItem = JsonConvert.DeserializeObject<GarageItem>(_garageItem);
+                    Utils.WriteLine("Bought item!");
+                    //Loop through all the garage items to get how many of these cars the character already has
+                    int vehGarageId = 0;
+                    foreach (GarageItem gI in playerCharacter.Garage.garageItems)
+                    {
+                        if (gI.vehicleModel == garageItem.vehicleModel)
+                        {
+                            vehGarageId++;
+                        }
+                    }
+                    string vehGarageIdString = "";
+                    if (vehGarageId > 0)
+                    {
+                        vehGarageIdString = vehGarageId.ToString();
+                    }
+                    //After the car is added into the garage, spawn it
+                    uint vehicleHash = Helpers.GetVehicleHashFromString(garageItem.vehicleModel);
+
+                    int vehicleID = await Helpers.SpawnVehicle(vehicleHash, garageItem.vehicleNumberPlate);
+                    Utils.WriteLine($"Vehicle created ID:[{vehicleID}], Vehicle networkID: [{API.NetworkGetNetworkIdFromEntity(vehicleID)}]");
+                    //Create the new garage item and add it into the character garage
+                    garageItem.setNetworkID(API.NetworkGetNetworkIdFromEntity(vehicleID));
+                    playerCharacter.Garage.garageItems.Add(garageItem);
+
+                    if (vehicleID != -1)
+                    {
+                        _ = _callback(new { ok = true });
+                    }
+                    else
+                    {
+                        _ = _callback(new { ok = false });
+                    }
+                }
+            }));
+
+            MainClient.GetInstance().SetNUIFocus(false, false);
+
+            await Task.FromResult(0);
+        }
+        private static void RetrieveGarageVehicle(dynamic _data, CallbackDelegate _callback)
+        {
+            int garageID = _data.garageID;
+            foreach (GarageItem gI in PlayerSession.getSelectedCharacter().Garage.garageItems)
+            {
+                if (gI.garageID == garageID)
+                {
+                    if (!gI.stored || gI.impounded) { Utils.WriteLine("Vehicle not stored or is impounded!"); _ = _callback(new { ok = false }); return; }
+
+                    MainClient.TriggerServerEvent("Laced:RetrieveGarageVehicle", PlayerSession.getSessionKey(), gI.garageID, new Action<bool, string>(async (_retrieved, _garageItem) => { 
+                        if (_retrieved)
+                        {
+                            GarageItem garageItem = JsonConvert.DeserializeObject<GarageItem>(_garageItem);
+
+                            gI.setImpounded(garageItem.impounded);
+                            gI.setStored(garageItem.stored);
+                            uint vehicleHash = Helpers.GetVehicleHashFromString(garageItem.vehicleModel);
+                            int vehicleID = await Helpers.SpawnVehicle(vehicleHash, garageItem.vehicleNumberPlate);
+
+                            gI.setNetworkID(API.NetworkGetNetworkIdFromEntity(vehicleID));
+                            
+                            if (vehicleID != -1)
+                            {
+                                _ = _callback(new { ok = true });
+                            }
+                            else
+                            {
+                                _ = _callback(new { ok = false});
+                            }
+                        }
+                    }));
+                }
+            }
+        }
         private static async void NUIDisconnect(dynamic _data, CallbackDelegate _callback)
         {
             await MainClient.Delay(500);
-
             UnregisterCharacterNUICallbacks();
             _ = _callback(new { ok = true });
         }

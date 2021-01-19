@@ -18,8 +18,32 @@ namespace LacedServer.Classes.Managers
         {
             MainServer.GetInstance().RegisterCommand("spawncar", new Action<int, List<object>, string>(SpawnCar), false);
             MainServer.GetInstance().RegisterCommand("changecharacter", new Action<int, List<object>, string>(ChangeCharacter), false);
+            MainServer.GetInstance().RegisterCommand("getpos", new Action<int, List<object>, string>(GetCharacterPosition), false);
+            MainServer.GetInstance().RegisterCommand("giveweapon", new Action<int, List<object>, string>(GiveWeapon), false);
         }
-
+        public void GetCharacterPosition(int _playerID, List<object> _args, string _raw)
+        {
+            if (_playerID > 0)
+            {
+                Session plySesh = SessionManager.Sessions.Find(s => s.Player.Handle == _playerID.ToString());
+                MainServer.TriggerClientEvent(plySesh.Player, "Laced:GetCharacterPosition", plySesh.SessionKey);
+            }
+            else
+            {
+                Utils.WriteLine("Console cannont use this command!");
+            }
+        }
+        public void GiveWeapon(int _playerID, List<object> _args, string _raw)
+        {
+            if (_playerID > 0)
+            {
+                if (_args.ToList().Count() > 0)
+                {
+                    Session plySesh = SessionManager.Sessions.Find(s => s.Player.Handle == _playerID.ToString());
+                    MainServer.TriggerClientEvent(plySesh.Player, "Laced:AdminGiveWeapon", plySesh.SessionKey, _args[0].ToString());
+                }
+            }
+        }
         public void SpawnCar(int _playerID, List<object> _args, string _raw)
         {
             if (_playerID > 0)

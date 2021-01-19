@@ -71,6 +71,9 @@
     <Compile Include="Classes\Managers\TimeManager.cs" />
     <Compile Include="Classes\Managers\WeatherManager.cs" />
     <Compile Include="Classes\MarkerActions.cs" />
+    <Compile Include="Classes\Player\BlipChange.cs" />
+    <Compile Include="Classes\Player\DriftCounter.cs" />
+    <Compile Include="Classes\Player\FlipChecker.cs" />
     <Compile Include="Loader.cs" />
     <Compile Include="MainClient.cs" />
     <Compile Include="Menus\CharacterModifier.cs" />
@@ -83,9 +86,7 @@
       <Name>LacedShared</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Classes\Player\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
